@@ -4,7 +4,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { apiReference } from "@scalar/hono-api-reference";
 import { openAPISpecs } from 'hono-openapi';
 import { telegramService } from "./services/telegram";
-import { auth, messages, updates, user } from "./routes";
+import { auth, messages, updates, user, chats } from "./routes";
 
 const app = new Hono();
 
@@ -61,6 +61,7 @@ app.route("/", auth);
 app.route("/", messages);
 app.route("/", updates);
 app.route("/", user);
+app.route("/", chats);
 
 // Error handling
 app.onError((err, c) => {

@@ -11,10 +11,11 @@
 - [x] `POST /unpinMessage` - Unpin a message
 
 ### Chat Operations
-- [ ] `GET /getChat` - Get information about a chat
-- [ ] `GET /getChatAdministrators` - Get list of chat admins
-- [ ] `GET /getChatMember` - Get information about a chat member
+- [x] `GET /getChat` - Get information about a chat
+- [x] `GET /getChatAdministrators` - Get list of chat admins
+- [x] `GET /getChatMember` - Get information about a chat member
 - [ ] `POST /leaveChat` - Leave a chat
+- [ ] `POST /joinChat` - Join a chat
 - [ ] `POST /setChatTitle` - Set chat title
 - [ ] `POST /setChatDescription` - Set chat description
 - [ ] `POST /setChatPhoto` - Set chat photo

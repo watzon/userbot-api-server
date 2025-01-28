@@ -313,13 +313,14 @@ export class UpdateManager {
 
   private async sendWebhook(user: User, update: Update) {
     console.log(`Sending webhook for ${user.phoneNumber} to ${user.webhookUrl}`);
-    const maxRetries = 2;
-    const timeout = 5000; // 5 seconds timeout
+    const maxRetries = 50; // Maximum number of retries
+    const baseTimeout = 5000; // Base timeout of 5 seconds
+    const maxBackoffTime = 30000; // Maximum backoff time of 30 seconds
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        const timeoutId = setTimeout(() => controller.abort(), baseTimeout);
 
         const headers: Record<string, string> = {
           'Content-Type': 'application/json'
@@ -339,31 +340,38 @@ export class UpdateManager {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
         }
         
-        // Success, exit retry loop
+        console.log(`Webhook delivered successfully on attempt ${attempt + 1}`);
         return;
       } catch (error: any) {
         const isLastAttempt = attempt === maxRetries;
         const isTimeout = error?.name === 'AbortError';
         
         if (isTimeout) {
-          console.error(`Webhook attempt ${attempt + 1}/${maxRetries + 1} timed out after ${timeout}ms`);
+          console.error(`Webhook attempt ${attempt + 1}/${maxRetries + 1} timed out after ${baseTimeout}ms`);
         } else {
-          console.error(
-            `Webhook attempt ${attempt + 1}/${maxRetries + 1} failed:`,
-            error?.message || error
-          );
+          let err = `Webhook attempt ${attempt + 1}/${maxRetries + 1} failed`
+          if (error?.message) {
+            err += `: ${error.message}`;
+          }
+          console.error(err);
         }
 
         if (isLastAttempt) {
-          console.error('All webhook attempts failed');
+          console.error(`All webhook attempts failed after ${maxRetries + 1} tries`);
           break;
         }
 
-        // Wait before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 100));
+        // Calculate backoff time with exponential increase and jitter
+        const backoffTime = Math.min(
+          Math.floor(Math.random() * 200) + Math.pow(2, attempt) * 1000,
+          maxBackoffTime
+        );
+        
+        console.log(`Waiting ${backoffTime}ms before retry ${attempt + 2}`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
   }
